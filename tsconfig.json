@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "rootDir": "src",
+    "target": "es5",
+    "module": "esnext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "strict": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationDir": "dist",
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": false
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+  ],
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
+  ]
+}
