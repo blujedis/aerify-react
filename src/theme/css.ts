@@ -1,10 +1,14 @@
 import { css } from './utils';
 import { IToggleStyleProps, ISelectStyleProps } from './types';
 
+export const THEME_TOGGLE_NAME = 'aerify-theme-toggle';
+
+export const THEME_SELECT_NAME = 'aerify-theme-select';
+
 export const createToggleStyles =
   ({ offColor, onColor, dotColor, color }: IToggleStyleProps) => css`
   
-  .toggle-switch {
+  ${'.' + THEME_TOGGLE_NAME} {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -21,7 +25,7 @@ export const createToggleStyles =
   }
 
   
-  .toggle-switch:before {
+  ${'.' + THEME_TOGGLE_NAME}:before {
     content: "dark light";
     display: block;
     position: absolute;
@@ -44,18 +48,18 @@ export const createToggleStyles =
     transition: all cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
     }
   
-    .toggle-switch:checked {
+    ${'.' + THEME_TOGGLE_NAME}:checked {
       background-color: ${onColor};
     }
   
-    .toggle-switch:checked:before {
+    ${'.' + THEME_TOGGLE_NAME}:checked:before {
       left: 42px;
     }
   
   `;
 
 export const createSelectStyles = ({ color, backgroundColor, caretColor }: ISelectStyleProps) => css`
-    .toggle-select {
+     ${'.' + THEME_SELECT_NAME} {
       background: url("data:image/svg+xml,<svg height='10px' width='10px' viewBox='0 0 16 16' fill='${caretColor}' xmlns='http://www.w3.org/2000/svg'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>") no-repeat;
       background-position: calc(100% - 0.75rem) center !important;
       -moz-appearance:none !important;

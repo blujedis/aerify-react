@@ -2,81 +2,27 @@ import { CSSProperties, Dispatch, SetStateAction, SelectHTMLAttributes, Detailed
 
 export type ThemeColor = CSSProperties['backgroundColor'] | CSSProperties['color'];
 
-export type Rules = string | ((theme: ITheme) => string);
+export type ThemeProp = string | number | Record<string, string | number>;
 
-export interface IThemeFont {
-  family: CSSProperties['fontFamily'];
-  familyMono: CSSProperties['fontFamily'];
-  color: string;
-  size: string;
-  weight: number;
+export type ThemeMap = {
+  [key: string]: ThemeProp | ThemeMap;
 }
 
-export interface IThemeRadius {
-  sm: string;
-  md: string;
-  lg: string;
-}
-
-export interface IThemeColor {
-  primary: ThemeColor;
-  secondary: ThemeColor;
-  danger: ThemeColor;
-  warning: ThemeColor;
-  info: ThemeColor;
-  success: ThemeColor;
-  white: ThemeColor;
-  black: ThemeColor;
-  grayDarker: ThemeColor;
-  grayDark: ThemeColor;
-  gray: ThemeColor;
-  grayLight: ThemeColor;
-  grayLighter: ThemeColor;
-  grayLightest: ThemeColor;
-}
-
-export interface IThemeMargin {
-  sm: string;
-  md: string;
-  lg: string;
-}
-
-export interface IThemePadding {
-  sm: string;
-  md: string;
-  lg: string;
-}
-
-export interface IThemeBody {
-  background: string;
-}
-
-export interface ITheme {
-  body: IThemeBody;
-  color: IThemeColor;
-  font: IThemeFont;
-  radius: IThemeRadius;
-  padding: IThemePadding;
-  margin: IThemeMargin;
-}
-
-export type ThemeValue = string | number;
-
-export type ThemeObject = Record<string, ThemeValue>;
+export type Rules = string | ((theme: ThemeMap) => string);
 
 export type ThemeFlatMap = {
-  [key: string]: ThemeValue | ThemeObject | ThemeFlatMap;
+  [key: string]: string | number;
 }
 
-export type ThemeMap = { [key: string]: ITheme };
+export type Themes = { [key: string]: ThemeMap };
 
-export interface IThemeContext<T extends ThemeMap> {
+export interface IThemeContext<T extends Themes> {
   themes: T;
   theme: keyof T;
   setTheme: Dispatch<SetStateAction<keyof T>>;
 }
 
-export interface IThemeSelectProps<T> extends DetailedHTMLProps<SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, Partial<ISelectStyleProps> {
+export interface IThemeSelectProps extends DetailedHTMLProps<SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, Partial<ISelectStyleProps> {
   animate?: boolean;
 }
 
@@ -106,5 +52,28 @@ export interface ISelectStyleProps {
 export interface IThemeStyleComponentProps {
   id?: string;
   children?: string;
-  rules?: Rules 
+  rules?: Rules
+}
+
+export interface IShades {
+  100: string;
+  200: string;
+  300: string;
+  400: string;
+  500: string;
+  600: string;
+  700: string;
+  800: string;
+  900: string;
+}
+
+export interface IShadesInit {
+  red: IShades;
+  orange: IShades;
+  yellow: IShades;
+  green: IShades;
+  blue: IShades;
+  purple: IShades;
+  magenta: IShades;
+  gray: IShades;
 }

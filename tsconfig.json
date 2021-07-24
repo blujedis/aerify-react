@@ -4,7 +4,6 @@
     "target": "es5",
     "module": "esnext",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "strict": true,
     "resolveJsonModule": true,
@@ -17,10 +16,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitAny": false,
+    "isolatedModules": true,
+    "downlevelIteration": true,
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
+    ],
+    "types": [
+      "webpack-env"
     ]
   },
   "exclude": [

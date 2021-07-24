@@ -5,7 +5,8 @@ import React, {
   useEffect,
 } from 'react';
 import { useTabs } from './controller';
-import { DivProps, IPane, IPanel, ITab, ITabs } from './types';
+import { IPane, IPanel, ITab, ITabs } from './types';
+import { DivProps } from '../types';
 
 export const Tab = (props: ITab) => {
   const { element, id, tabs, activeClass } = props as Required<typeof props>;

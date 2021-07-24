@@ -5,15 +5,24 @@
  * @see https://www.npmjs.com/package/style-to-js (convert style to js object for inline.)
  */
 import React, { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useMemo, useState, useCallback } from 'react';
-import { createSelectStyles, createToggleStyles } from './css';
-import { IThemeContext, ThemeMap, IThemeToggleProps, IThemeSelectProps, Rules, IThemeStyleComponentProps, ITheme, ThemeFlatMap } from './types';
-import { flattenVars, genUID, initLocalStorage, noop, useIsomorphicLayoutEffect } from './utils';
+import { createSelectStyles, createToggleStyles, THEME_SELECT_NAME, THEME_TOGGLE_NAME } from './css';
+import type { IThemeContext, Themes, IThemeToggleProps, IThemeSelectProps, Rules, IThemeStyleComponentProps } from './types';
+import { flattenTheme, genUID, initLocalStorage, noop, useIsomorphicLayoutEffect, THEME_NAME, THEME_GLOBALS_NAME, appendAfter, genSassVars } from './utils';
 
 const DEFAULT_CONTEXT: IThemeContext<any> = {
   themes: {} as any,
   theme: '',
-  setTheme: (theme: any) => { }
+  setTheme: () => { }
 };
+
+export interface IStyleMap {
+  id: string;
+  element?: HTMLStyleElement;
+  wrap?: string | boolean; // wraps style with id as selector.
+  rules?: Rules;
+  extracted?: boolean;
+  dynamic?: boolean;
+}
 
 /**
  * Initializes the theme context returns context, provider and helper hooks.
@@ -30,7 +39,7 @@ const DEFAULT_CONTEXT: IThemeContext<any> = {
  * @param themes an object containing your themes.
  * @returns a theme context, provider and hooks for managing app themes.
  */
-const initTheme = <T extends ThemeMap>(themes: T) => {
+export const initTheme = <T extends Themes>(themes: T, generateSassVars = false) => {
 
   if (!themes)
     throw new Error(`A themes map of ThemeMap is required.`);
@@ -41,15 +50,66 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
   } as IThemeContext<T>);
 
   const Consumer = Context.Consumer;
-  const styles = new Map<string, HTMLStyleElement>();
-  const storage = initLocalStorage();
-
   Context.displayName = 'ThemeContext';
 
+  const styles = new Map<string, IStyleMap>();
+  const storage = initLocalStorage();
+  let themesSass = {} as Record<keyof T, string>;
+
+  // iterate themes and flatten into css vars
   const themesFlat = Object.keys(themes).reduce((a, c) => {
-    a[c as keyof T] = flattenVars(themes[c] as unknown as ThemeFlatMap, '--');
+    a[c as keyof T] = flattenTheme(themes[c], '--');
     return a;
-  }, {} as Record<keyof T, Record<string, string> & { toString: () => string; }>);
+  }, {} as Record<keyof T, string>);
+
+  if (generateSassVars)
+    themesSass = Object.keys(themes).reduce((a, c) => {
+      a[c as keyof T] = genSassVars(themes[c]);
+      return a;
+    }, {} as Record<keyof T, string>);
+
+  /**
+   * Creates and mounts style in collection.
+   * 
+   * @param id the id of the style.
+   * @param rules the css interpolation or function for creating the style.
+   * @param wrap when true wraps using id as selector name.
+   */
+  function createStyle(id: string, rules?: Rules, wrap?: string | boolean): void;
+
+  /**
+   * Creates a style and adds to collection.
+   * 
+   * @param conf the style configuration object.
+   */
+  function createStyle(conf: IStyleMap): void;
+  function createStyle(idOrConf: string | IStyleMap, rules?: Rules, wrap: string | boolean = false) {
+    let conf = idOrConf as IStyleMap;
+    if (typeof idOrConf !== 'object') {
+      conf = {
+        id: idOrConf,
+        rules,
+        wrap
+      };
+    }
+    if (styles.get(conf.id))
+      throw new Error(`Attempted to overwrite style \`${conf.id}\`.`);
+    styles.set(conf.id, conf);
+  }
+
+  const normalizeStyle = (theme: keyof T, id: string, rules: Rules, wrap: string | boolean, compact = false) => {
+    const _theme = themes[theme];
+    let cssStr = typeof rules === 'function'
+      ? rules(_theme)
+      : rules;
+    if (wrap) {
+      const prefix = typeof wrap === 'string' ? wrap : '.';
+      cssStr = `${prefix}${id}{\n${cssStr}\n}`;
+    }
+    if (compact)
+      cssStr = cssStr.replace(/\n/g, '');
+    return cssStr;
+  };
 
   /**
    * Creates a provider giving access to the theme context.
@@ -77,11 +137,11 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
       if (typeof document === 'undefined')
         return;
 
-      let style = document.getElementById('__theme__');
+      let style = document.getElementById(THEME_NAME);
 
       if (!style) {
         style = document.createElement('style');
-        style.setAttribute('id', '__theme__');
+        style.setAttribute('id', THEME_NAME);
         document.head.appendChild(style);
       }
 
@@ -89,14 +149,29 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
 
       if (activeTheme !== theme) {
         style.setAttribute('data-theme', theme as string);
-        style.innerHTML = `:root {${themesFlat[theme].toString().trim().replace(/\n/g, '')}}`;
+        style.innerHTML = `:root {${themesFlat[theme].trim().replace(/\n/g, '')}}`;
       }
 
     }, [theme]);
 
+    const mountStyles = useCallback(() => {
+      styles.forEach(style => {
+        const { id, rules, wrap, dynamic, extracted, element } = style;
+        // shouldn't have dynamic here but...
+        if (typeof document !== 'undefined' && (!dynamic && !extracted && !element)) {
+          const elem = document.createElement('style');
+          elem.setAttribute('id', style.id);
+          elem.innerHTML = normalizeStyle(theme, id, rules as Rules, wrap as string, true)
+          document.head.appendChild(elem);
+          style.element = elem;
+        }
+      });
+    }, []);
+
     const value = useMemo(() => {
 
       ensureVars();
+      mountStyles();
 
       return {
         themes,
@@ -127,52 +202,41 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
   }
 
   /**
-   * Theme hook provides access to the theme context.
-   */
-  const useTheme = (): ITheme => {
-    const ctx = useThemeContext();
-    return ctx.themes[ctx.theme];
-  };
-
-  /**
-   * A void hook that appends styles to the header by id.
+   * A hook that appends styles to the header by id.
    * 
    * @example
-   * const ctx = useStyle('my-style', css`.some-class { }`);
+   * appendStyle('my-style', css`.some-class { }`, 'my-style');
    * 
    * @example
-   * const ctx = 
-   *    useState('my-style', (theme) => css`.some-class { color: ${theme.font.color}}`);
+   * appendStyle('my-style', (theme) => css`.some-class { color: ${theme.font.color}}`,  true);
    * 
-   * @param id the id to use for saving the style element.
    * @param rules the style's rules that should be applied.
+   * @param id the id to use for saving the style element.
+   * @param wrap when true wraps the element as .id_name { rules }
    * @returns the current theme context.
    */
-  const useStyle = (id: string, rules: Rules) => {
+  function appendStyle(id: string, rules: Rules, wrap?: string | boolean) {
 
     const ctx = useThemeContext();
 
     useIsomorphicLayoutEffect(() => {
 
-      if (!ctx || !rules || !ctx.theme)
+      if (!ctx || !rules || !ctx.theme || styles.get(id as string))
         return;
 
-      const currentStyle = styles.get(id);
-      const style = currentStyle || document.createElement('style');
-
-      // TODO: Create method to trim whitespace
-      // for now just trim and replace line returns.
-      style.innerHTML = (typeof rules === 'function' ? rules(ctx.themes[ctx.theme]) : rules).trim().replace(/\n/g, '');
-
-      if (!currentStyle) {
-        style.setAttribute('id', id);
-        document.head.appendChild(style);
-        styles.set(id, style);
+      const style = document.createElement('style');
+      style.innerHTML = normalizeStyle(ctx.theme, id, rules, wrap as string, true);
+      style.setAttribute('id', id as string);
+      if (id === THEME_GLOBALS_NAME) {
+        const parent = document.head.querySelector('#' + THEME_NAME);
+        appendAfter(style, parent);
       }
+      else {
+        document.head.appendChild(style);
+      }
+      createStyle({ id, element: style, dynamic: true });
 
     }, [id, rules, ctx.theme]);
-
-    return ctx;
 
   };
 
@@ -212,6 +276,21 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
   };
 
   /**
+   * Theme hook provides access to the theme context.
+   */
+  const useTheme = () => {
+
+    const ctx = useThemeContext();
+
+    // const _addStyle = (id: string, rules: Rules) => {
+
+    // };
+
+    return ctx.themes[ctx.theme];
+
+  };
+
+  /**
    * A null component that allows you to add styles inline as a component.
    * 
    * @param props theme style component options.
@@ -220,7 +299,7 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
   const ThemeStyles = ({ id, children, rules }: IThemeStyleComponentProps) => {
     id = id || genUID();
     rules = (children || rules) as Rules;
-    useStyle(id, rules);
+    appendStyle(id, rules);
     return null;
   };
 
@@ -231,7 +310,7 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
    * @returns a ThemeStyles nullable component.
    */
   const ThemeGlobals = (props: Omit<IThemeStyleComponentProps, 'id'>) => {
-    const id = '__global__';
+    const id = THEME_GLOBALS_NAME;
     return (
       <ThemeStyles {...props} id={id} />
     );
@@ -246,23 +325,23 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
   * @param props theme switcher options and select attributes.
   * @returns a select element for selecting a theme.
   */
-  const ThemeSelector = (props: IThemeSelectProps<T>) => {
+  const ThemeSelector = (props: IThemeSelectProps) => {
 
     props = {
       color: '#fff',
       backgroundColor: '#323438',
       caretColor: '#bbbbff',
-      ...(props as Partial<IThemeSelectProps<T>>)
-    } as IThemeSelectProps<T>;
+      ...(props as Partial<IThemeSelectProps>)
+    } as IThemeSelectProps;
 
     props.caretColor = (props.caretColor || '').replace('#', '%23');
 
-    const { animate, color, backgroundColor, caretColor, ...rest } = props as Required<IThemeSelectProps<T>>;
+    const { animate, color, backgroundColor, caretColor, ...rest } = props as Required<IThemeSelectProps>;
 
     const { themes, setTheme, theme } = useThemeSwitcher(animate);
     const [activeTheme, setActiveTheme] = useState('' as keyof T);
 
-    useStyle('toggle-select', createSelectStyles({ color, backgroundColor, caretColor }));
+    appendStyle(THEME_SELECT_NAME, createSelectStyles({ color, backgroundColor, caretColor }));
 
     useEffect(() => {
       setActiveTheme(theme)
@@ -279,7 +358,7 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
     return (
       <select
         {...rest}
-        className="toggle-select"
+        className={THEME_SELECT_NAME}
         value={activeTheme as string}
         onChange={(e) => setTheme(e.currentTarget.value)} >
         {getOptions()}
@@ -316,7 +395,7 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
     const { theme, setTheme } = useThemeSwitcher(animate);
     const [activeTheme, setActiveTheme] = useState('' as keyof T);
 
-    useStyle('toggle-switch', createToggleStyles({ offColor: offColor, onColor: onColor, dotColor, color: color }));
+    appendStyle(THEME_TOGGLE_NAME, createToggleStyles({ offColor: offColor, onColor: onColor, dotColor, color: color }));
 
     useEffect(() => {
       setActiveTheme(theme)
@@ -329,7 +408,7 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
 
     return (
       <input type="checkbox"
-        className="toggle-switch"
+        className={THEME_TOGGLE_NAME}
         onClick={() => setTheme(theme === on ? off : on)}
         checked={activeTheme === on || theme === on}
         onChange={noop}
@@ -340,25 +419,20 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
   };
 
   if (module.hot) {
-
     module.hot.dispose(() => {
-
       styles.forEach(style => {
-        if (document && document.head.contains(style)) {
-          document.head.removeChild(style);
-        }
+        if (document && style.element && document.head.contains(style.element))
+          document.head.removeChild(style.element);
       });
-
       styles.clear();
-
     });
-
   }
 
   return {
     Context,
     Consumer,
     Provider,
+    createStyle,
     useTheme,
     useThemeContext,
     useThemeSwitcher,
@@ -368,7 +442,4 @@ const initTheme = <T extends ThemeMap>(themes: T) => {
     ThemeToggle
   };
 
-}
-
-export { initTheme };
-
+};

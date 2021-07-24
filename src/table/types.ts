@@ -1,12 +1,8 @@
-import { DetailedHTMLProps, Dispatch, TableHTMLAttributes, HTMLAttributes, PropsWithChildren } from 'react';
+import { Dispatch, HTMLAttributes, PropsWithChildren } from 'react';
 import { IOrderByOptions } from './orderby';
+import { TableProps, DivProps } from '../types';
 import Fuse from 'fuse.js';
 import { IPagerControllerApi, IPaginatorOptions } from '../pager';
-// import { ReactSortableProps, Store } from 'react-sortablejs';
-
-export type TableProps = DetailedHTMLProps<TableHTMLAttributes<HTMLTableElement>, HTMLTableElement>;
-
-export type DivProps = DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 export type TableCreate = (props: TableOptions<ITableControllerApi>) => JSX.Element;
 

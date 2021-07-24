@@ -1,4 +1,5 @@
-import { DetailedHTMLProps, HTMLAttributes, LiHTMLAttributes, ReactNode } from 'react';
+import { ReactNode } from 'react';
+import { DivProps } from '../types';
 import { useTabs } from './controller';
 
 export interface ITabsState {
@@ -6,21 +7,6 @@ export interface ITabsState {
   tabs: JSX.Element[];
   ids: string[];
 }
-
-export type DivProps = DetailedHTMLProps<
-  HTMLAttributes<HTMLDivElement>,
-  HTMLDivElement
->;
-
-export type UlProps = DetailedHTMLProps<
-  HTMLAttributes<HTMLUListElement>,
-  HTMLUListElement
->;
-
-export type LiProps = DetailedHTMLProps<
-  LiHTMLAttributes<HTMLLIElement>,
-  HTMLLIElement
->;
 
 export type UseTabs = typeof useTabs;
 
