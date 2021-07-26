@@ -1581,10 +1581,11 @@ var THEME_BASE = {
     },
     color: {
         primary: 'hsl(210, 95%, 45%)',
-        success: 'hsl(158, 78%, 43%)',
+        success: 'hsl(158, 65%, 40%)',
         warning: 'hsl(26, 89%, 64%)',
         danger: 'hsl(349, 75%, 57%)',
-        secondary: 'hsl(0, 0%, 60%)',
+        dim: 'hsl(0, 0%, 65%)',
+        dark: 'hsl(205, 8%, 28%)',
         white: 'hsl(0, 100%, 100%)',
         black: 'hsl(0, 0%, 0%)'
     },
@@ -1601,12 +1602,6 @@ var THEME_BASE = {
         spacer: '.5rem',
         margin: '1.25rem',
         padding: '1.25rem'
-    },
-    breakpoint: {
-        tablet: '40rem',
-        desktop: '80rem',
-        wide: '120rem',
-        ultrawide: '160rem'
     },
     radius: {
         small: '.2rem',
@@ -1636,10 +1631,10 @@ var THEME_BASE = {
                 normal: '1.6em',
             }
         },
-        // darken: {
-        //   normal: '8%',
-        //   outlined: '15%'
-        // }
+        darken: {
+            normal: '8%',
+            outlined: '15%'
+        }
     },
     toggle: {
         switch: {

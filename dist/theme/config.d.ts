@@ -26,7 +26,8 @@ export declare const THEME_BASE: {
         success: string;
         warning: string;
         danger: string;
-        secondary: string;
+        dim: string;
+        dark: string;
         white: string;
         black: string;
     };
@@ -43,12 +44,6 @@ export declare const THEME_BASE: {
         spacer: string;
         margin: string;
         padding: string;
-    };
-    breakpoint: {
-        tablet: string;
-        desktop: string;
-        wide: string;
-        ultrawide: string;
     };
     radius: {
         small: string;
@@ -77,6 +72,10 @@ export declare const THEME_BASE: {
                 large: string;
                 normal: string;
             };
+        };
+        darken: {
+            normal: string;
+            outlined: string;
         };
     };
     toggle: {
@@ -214,7 +213,8 @@ export declare const createTheme: <O extends ThemeMap, S extends Record<keyof IS
         success: string;
         warning: string;
         danger: string;
-        secondary: string;
+        dim: string;
+        dark: string;
         white: string;
         black: string;
     };
@@ -231,12 +231,6 @@ export declare const createTheme: <O extends ThemeMap, S extends Record<keyof IS
         spacer: string;
         margin: string;
         padding: string;
-    };
-    breakpoint: {
-        tablet: string;
-        desktop: string;
-        wide: string;
-        ultrawide: string;
     };
     radius: {
         small: string;
@@ -265,6 +259,10 @@ export declare const createTheme: <O extends ThemeMap, S extends Record<keyof IS
                 large: string;
                 normal: string;
             };
+        };
+        darken: {
+            normal: string;
+            outlined: string;
         };
     };
     toggle: {
@@ -351,7 +349,8 @@ declare const light: {
         success: string;
         warning: string;
         danger: string;
-        secondary: string;
+        dim: string;
+        dark: string;
         white: string;
         black: string;
     };
@@ -368,12 +367,6 @@ declare const light: {
         spacer: string;
         margin: string;
         padding: string;
-    };
-    breakpoint: {
-        tablet: string;
-        desktop: string;
-        wide: string;
-        ultrawide: string;
     };
     radius: {
         small: string;
@@ -402,6 +395,10 @@ declare const light: {
                 large: string;
                 normal: string;
             };
+        };
+        darken: {
+            normal: string;
+            outlined: string;
         };
     };
     toggle: {
@@ -489,7 +486,8 @@ export declare const THEMES: {
             success: string;
             warning: string;
             danger: string;
-            secondary: string;
+            dim: string;
+            dark: string;
             white: string;
             black: string;
         };
@@ -506,12 +504,6 @@ export declare const THEMES: {
             spacer: string;
             margin: string;
             padding: string;
-        };
-        breakpoint: {
-            tablet: string;
-            desktop: string;
-            wide: string;
-            ultrawide: string;
         };
         radius: {
             small: string;
@@ -540,6 +532,10 @@ export declare const THEMES: {
                     large: string;
                     normal: string;
                 };
+            };
+            darken: {
+                normal: string;
+                outlined: string;
             };
         };
         toggle: {
@@ -626,7 +622,8 @@ export declare const THEMES: {
             success: string;
             warning: string;
             danger: string;
-            secondary: string;
+            dim: string;
+            dark: string;
             white: string;
             black: string;
         };
@@ -643,12 +640,6 @@ export declare const THEMES: {
             spacer: string;
             margin: string;
             padding: string;
-        };
-        breakpoint: {
-            tablet: string;
-            desktop: string;
-            wide: string;
-            ultrawide: string;
         };
         radius: {
             small: string;
@@ -677,6 +668,10 @@ export declare const THEMES: {
                     large: string;
                     normal: string;
                 };
+            };
+            darken: {
+                normal: string;
+                outlined: string;
             };
         };
         toggle: {
